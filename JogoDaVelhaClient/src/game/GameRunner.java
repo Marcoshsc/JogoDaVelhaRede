@@ -42,6 +42,8 @@ public class GameRunner implements Runnable {
     }
 
     private void runGame() {
+        String opponentName = (isP1 ? game.getPlayer2().getUsername() : game.getPlayer1().getUsername());
+        System.out.println("Oponente: " + opponentName);
         try {
             int madeMoves = 0;
             while (true) {
@@ -92,7 +94,7 @@ public class GameRunner implements Runnable {
                         if(!game.someoneWon())
                             System.out.println("Empate!");
                         else {
-                            System.out.println("Você Perdeu!");
+                            System.out.println("Você Perdeu! Vitória de " + opponentName);
                             if(isP1)
                                 scoreCounter.p2Scored();
                             else
