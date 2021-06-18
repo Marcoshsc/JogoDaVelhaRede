@@ -78,6 +78,9 @@ public class GameInstance implements Runnable {
                 CommunicationHandler.of(notPlayingConnectionHandler).sendMessage(CommunicationTypes.GAME_END,
                         Game.networkTransferable(), game);
             }
+            EndGameManager endGameManager = new EndGameManager(p1, p2);
+            Thread thread = new Thread(endGameManager);
+            thread.start();
             return true;
         }
         if(connectionHandler != null) {

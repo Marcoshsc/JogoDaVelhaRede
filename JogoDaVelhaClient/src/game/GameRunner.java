@@ -16,12 +16,24 @@ public class GameRunner implements Runnable {
 
     private Game game;
     private final ConnectionHandler connectionHandler;
+    private final Player player;
     private final boolean isP1;
+    private final ScoreCounter scoreCounter;
 
     public GameRunner(Game game, ConnectionHandler connectionHandler, Player player) {
         this.game = game;
         this.connectionHandler = connectionHandler;
+        this.player = player;
         this.isP1 = player.getShape() == game.getPlayer1().getShape();
+        this.scoreCounter = new ScoreCounter();
+    }
+
+    public GameRunner(Game game, ConnectionHandler connectionHandler, Player player, ScoreCounter scoreCounter) {
+        this.game = game;
+        this.connectionHandler = connectionHandler;
+        this.player = player;
+        this.isP1 = player.getShape() == game.getPlayer1().getShape();
+        this.scoreCounter = scoreCounter;
     }
 
     @Override
@@ -45,12 +57,18 @@ public class GameRunner implements Runnable {
                     );
                     if(answer.getType() == CommunicationTypes.GAME_END) {
                         game = (Game) answer.getValue();
+                        scoreCounter.incrementGames();
                         System.out.println(game.getBoardString());
                         if(!game.someoneWon())
                             System.out.println("Empate!");
                         else {
                             System.out.println("Você Venceu!");
+                            if(isP1)
+                                scoreCounter.p1Scored();
+                            else
+                                scoreCounter.p2Scored();
                         }
+                        goToPlayAgainHandler();
                         break;
                     }
                     if(answer.getType() == CommunicationTypes.PLAYER_MOVE)
@@ -70,10 +88,17 @@ public class GameRunner implements Runnable {
                     if(answer.getType() == CommunicationTypes.GAME_END) {
                         game = (Game) answer.getValue();
                         System.out.println(game.getBoardString());
+                        scoreCounter.incrementGames();
                         if(!game.someoneWon())
                             System.out.println("Empate!");
-                        else
+                        else {
                             System.out.println("Você Perdeu!");
+                            if(isP1)
+                                scoreCounter.p2Scored();
+                            else
+                                scoreCounter.p1Scored();
+                        }
+                        goToPlayAgainHandler();
                         break;
                     }
                     if(answer.getType() == CommunicationTypes.PLAYER_MOVE)
@@ -85,6 +110,11 @@ public class GameRunner implements Runnable {
         } catch(IOException exc) {
             exc.printStackTrace();
         }
+    }
+
+    private void goToPlayAgainHandler() {
+        Thread playAgainThread = new Thread(new PlayAgainManager(connectionHandler, player, scoreCounter, isP1));
+        playAgainThread.start();
     }
 
     private Move readMove() {
